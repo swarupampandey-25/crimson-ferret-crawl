@@ -75,6 +75,7 @@ interface DppContextType {
   chats: Record<string, AIChat>; // keyed by question_id
   formulas: Formula[];
   studyStats: StudyStats;
+  bookmarkedQuestionIds: string[];
   addChapter: (subject: "Physics" | "Chemistry" | "Biology", name: string) => void;
   addQuestion: (question: Omit<Question, "question_id" | "created_at">) => Question;
   submitAttempt: (attempt: Omit<UserAttempt, "attempt_id" | "attempted_at">) => void;
@@ -86,6 +87,7 @@ interface DppContextType {
   toggleFormulaFavorite: (formula_id: string) => void;
   deleteFormula: (formula_id: string) => void;
   addFocusedMinutes: (minutes: number) => void;
+  toggleBookmarkQuestion: (question_id: string) => void;
 }
 
 const DppContext = createContext<DppContextType | undefined>(undefined);
@@ -233,6 +235,11 @@ export const DppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return saved ? JSON.parse(saved) : { focused_minutes: 45, completed_sessions: 2 };
   });
 
+  const [bookmarkedQuestionIds, setBookmarkedQuestionIds] = useState<string[]>(() => {
+    const saved = localStorage.getItem("dpp_bookmarks");
+    return saved ? JSON.parse(saved) : [];
+  });
+
   useEffect(() => {
     localStorage.setItem("dpp_chapters", JSON.stringify(chapters));
   }, [chapters]);
@@ -260,6 +267,10 @@ export const DppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     localStorage.setItem("dpp_study_stats", JSON.stringify(studyStats));
   }, [studyStats]);
+
+  useEffect(() => {
+    localStorage.setItem("dpp_bookmarks", JSON.stringify(bookmarkedQuestionIds));
+  }, [bookmarkedQuestionIds]);
 
   const addChapter = (subject: "Physics" | "Chemistry" | "Biology", name: string) => {
     const alreadyExists = chapters.some(
@@ -441,6 +452,19 @@ export const DppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     showSuccess(`Fantastic! You earned +${minutes} focused minutes.`);
   };
 
+  const toggleBookmarkQuestion = (question_id: string) => {
+    setBookmarkedQuestionIds((prev) => {
+      const isBookmarked = prev.includes(question_id);
+      if (isBookmarked) {
+        showSuccess("Question removed from bookmarks.");
+        return prev.filter((id) => id !== question_id);
+      } else {
+        showSuccess("Question pinned to your review bookmarks.");
+        return [...prev, question_id];
+      }
+    });
+  };
+
   return (
     <DppContext.Provider
       value={{
@@ -451,6 +475,7 @@ export const DppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         chats,
         formulas,
         studyStats,
+        bookmarkedQuestionIds,
         addChapter,
         addQuestion,
         submitAttempt,
@@ -462,6 +487,7 @@ export const DppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         toggleFormulaFavorite,
         deleteFormula,
         addFocusedMinutes,
+        toggleBookmarkQuestion,
       }}
     >
       {children}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useDpp, Question } from "../context/DppContext";
-import { Send, MessageSquare, RefreshCw, AlertTriangle, CheckCircle, HelpCircle, Sparkles, User, BrainCircuit } from "lucide-react";
+import { Send, MessageSquare, Bookmark, RefreshCw, AlertTriangle, CheckCircle, HelpCircle, Sparkles, User, BrainCircuit } from "lucide-react";
 import { showSuccess } from "@/utils/toast";
 
 interface QuestionCardProps {
@@ -9,12 +9,14 @@ interface QuestionCardProps {
 }
 
 export const QuestionCard: React.FC<QuestionCardProps> = ({ question, onAnswerAttempted }) => {
-  const { submitAttempt, chats, sendMessageToChat, spawnSimilarQuestion, attempts } = useDpp();
+  const { submitAttempt, chats, sendMessageToChat, spawnSimilarQuestion, attempts, bookmarkedQuestionIds, toggleBookmarkQuestion } = useDpp();
   const [selectedOption, setSelectedOption] = useState<"A" | "B" | "C" | "D" | null>(null);
   const [timer, setTimer] = useState(0);
   const [chatInput, setChatInput] = useState("");
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const chatBottomRef = useRef<HTMLDivElement>(null);
+
+  const isBookmarked = bookmarkedQuestionIds.includes(question.question_id);
 
   // Check if user has already answered this question in this session
   const priorAttempt = attempts.find((a) => a.question_id === question.question_id);
@@ -119,9 +121,22 @@ What do you think is the key step to proceed?`;
               Topic: {question.topic_name}
             </span>
           </div>
-          <div className="text-xs text-emerald-400 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800/80 font-mono flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-            Timer: {isLocked ? formatTime(priorAttempt?.time_taken_seconds || 0) : formatTime(timer)}
+          <div className="flex items-center gap-2.5">
+            <button
+              onClick={() => toggleBookmarkQuestion(question.question_id)}
+              className={`p-1.5 rounded-xl border transition-all ${
+                isBookmarked
+                  ? "bg-amber-500/15 border-amber-500/30 text-amber-400"
+                  : "bg-slate-950 border-slate-800/80 text-slate-500 hover:text-slate-300"
+              }`}
+              title={isBookmarked ? "Bookmarked question" : "Bookmark for later review"}
+            >
+              <Bookmark className="w-4 h-4 fill-current" />
+            </button>
+            <div className="text-xs text-emerald-400 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800/80 font-mono flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              Timer: {isLocked ? formatTime(priorAttempt?.time_taken_seconds || 0) : formatTime(timer)}
+            </div>
           </div>
         </div>
 
@@ -171,7 +186,7 @@ What do you think is the key step to proceed?`;
                 key={key}
                 disabled={isLocked}
                 onClick={() => handleSelectOption(key)}
-                className={`w-full p-4 rounded-2xl border text-left text-sm font-medium transition-all flex items-center justify-between gap-3 ${btnStyle} ${
+                className={`w-full p-4 rounded-2xl border text-left text-sm font-medium transition-all flex items-center justify-between gap-3 ${
                   !isLocked ? "active:scale-[0.99] cursor-pointer" : "cursor-default"
                 }`}
               >
