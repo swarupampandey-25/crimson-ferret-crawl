@@ -52,12 +52,29 @@ export interface AIChat {
   updated_at: string;
 }
 
+export interface Formula {
+  formula_id: string;
+  chapter_id: string;
+  subject_name: "Physics" | "Chemistry" | "Biology";
+  title: string;
+  expression: string;
+  description: string;
+  is_favorite: boolean;
+}
+
+export interface StudyStats {
+  focused_minutes: number;
+  completed_sessions: number;
+}
+
 interface DppContextType {
   chapters: Chapter[];
   questions: Question[];
   attempts: UserAttempt[];
   mistakes: MistakeEntry[];
   chats: Record<string, AIChat>; // keyed by question_id
+  formulas: Formula[];
+  studyStats: StudyStats;
   addChapter: (subject: "Physics" | "Chemistry" | "Biology", name: string) => void;
   addQuestion: (question: Omit<Question, "question_id" | "created_at">) => Question;
   submitAttempt: (attempt: Omit<UserAttempt, "attempt_id" | "attempted_at">) => void;
@@ -65,6 +82,10 @@ interface DppContextType {
   removeFromMistakeBook: (question_id: string) => void;
   sendMessageToChat: (question_id: string, message: string, assistantReply?: string) => void;
   spawnSimilarQuestion: (parentQuestion: Question) => Question;
+  addFormula: (formula: Omit<Formula, "formula_id" | "is_favorite">) => void;
+  toggleFormulaFavorite: (formula_id: string) => void;
+  deleteFormula: (formula_id: string) => void;
+  addFocusedMinutes: (minutes: number) => void;
 }
 
 const DppContext = createContext<DppContextType | undefined>(undefined);
@@ -146,6 +167,36 @@ const initialQuestions: Question[] = [
   }
 ];
 
+const initialFormulas: Formula[] = [
+  {
+    formula_id: "f-1",
+    chapter_id: "ch-1",
+    subject_name: "Physics",
+    title: "Parallel Axis Theorem",
+    expression: "I = I_cm + M d²",
+    description: "Computes moment of inertia about any axis parallel to the axis passing through center of mass.",
+    is_favorite: true
+  },
+  {
+    formula_id: "f-2",
+    chapter_id: "ch-2",
+    subject_name: "Physics",
+    title: "Electric Potential of Point Charge",
+    expression: "V = k Q / r",
+    description: "Determines work required to bring unit positive charge from infinity.",
+    is_favorite: false
+  },
+  {
+    formula_id: "f-3",
+    chapter_id: "ch-3",
+    subject_name: "Chemistry",
+    title: "Formal Charge calculation",
+    expression: "FC = V - N - B/2",
+    description: "V = Valence electrons, N = Non-bonding electrons, B = bonding shared electrons.",
+    is_favorite: true
+  }
+];
+
 export const DppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [chapters, setChapters] = useState<Chapter[]>(() => {
     const saved = localStorage.getItem("dpp_chapters");
@@ -172,6 +223,16 @@ export const DppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return saved ? JSON.parse(saved) : {};
   });
 
+  const [formulas, setFormulas] = useState<Formula[]>(() => {
+    const saved = localStorage.getItem("dpp_formulas");
+    return saved ? JSON.parse(saved) : initialFormulas;
+  });
+
+  const [studyStats, setStudyStats] = useState<StudyStats>(() => {
+    const saved = localStorage.getItem("dpp_study_stats");
+    return saved ? JSON.parse(saved) : { focused_minutes: 45, completed_sessions: 2 };
+  });
+
   useEffect(() => {
     localStorage.setItem("dpp_chapters", JSON.stringify(chapters));
   }, [chapters]);
@@ -191,6 +252,14 @@ export const DppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     localStorage.setItem("dpp_chats", JSON.stringify(chats));
   }, [chats]);
+
+  useEffect(() => {
+    localStorage.setItem("dpp_formulas", JSON.stringify(formulas));
+  }, [formulas]);
+
+  useEffect(() => {
+    localStorage.setItem("dpp_study_stats", JSON.stringify(studyStats));
+  }, [studyStats]);
 
   const addChapter = (subject: "Physics" | "Chemistry" | "Biology", name: string) => {
     const alreadyExists = chapters.some(
@@ -241,7 +310,6 @@ export const DppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const addToMistakeBook = (question_id: string, chapter_id: string, error_type: MistakeEntry["error_type"]) => {
-    // Check if mistake already logged for this question
     const alreadyLogged = mistakes.some((m) => m.question_id === question_id);
     if (alreadyLogged) return;
 
@@ -272,7 +340,7 @@ export const DppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const userMsg: ChatMessage = { role: "user", content: message };
       const aiMsg: ChatMessage = {
         role: "assistant",
-        content: assistantReply || `Hey! Let me help you break down this question. Let's look closely at the concept. If we apply the formulas step-by-step, we see that the logic leads right to the correct answer. Tell me which step seemed confusing!`,
+        content: assistantReply || `Let's break this down. In the topic "${questions.find(q => q.question_id === question_id)?.topic_name || "Physics"}", remember to use the correct formulas and double-check standard values!`,
       };
 
       return {
@@ -287,7 +355,6 @@ export const DppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const spawnSimilarQuestion = (parentQuestion: Question): Question => {
-    // Generates a conceptual variant of the current question
     let textVariant = "";
     let optA = "";
     let optB = "";
@@ -345,6 +412,35 @@ export const DppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return spawned;
   };
 
+  const addFormula = (fData: Omit<Formula, "formula_id" | "is_favorite">) => {
+    const newFormula: Formula = {
+      ...fData,
+      formula_id: `f-${Date.now()}`,
+      is_favorite: false,
+    };
+    setFormulas((prev) => [newFormula, ...prev]);
+    showSuccess(`Formula "${fData.title}" saved successfully!`);
+  };
+
+  const toggleFormulaFavorite = (formula_id: string) => {
+    setFormulas((prev) =>
+      prev.map((f) => (f.formula_id === formula_id ? { ...f, is_favorite: !f.is_favorite } : f))
+    );
+  };
+
+  const deleteFormula = (formula_id: string) => {
+    setFormulas((prev) => prev.filter((f) => f.formula_id !== formula_id));
+    showSuccess("Formula removed.");
+  };
+
+  const addFocusedMinutes = (minutes: number) => {
+    setStudyStats((prev) => ({
+      focused_minutes: prev.focused_minutes + minutes,
+      completed_sessions: prev.completed_sessions + 1,
+    }));
+    showSuccess(`Fantastic! You earned +${minutes} focused minutes.`);
+  };
+
   return (
     <DppContext.Provider
       value={{
@@ -353,6 +449,8 @@ export const DppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         attempts,
         mistakes,
         chats,
+        formulas,
+        studyStats,
         addChapter,
         addQuestion,
         submitAttempt,
@@ -360,6 +458,10 @@ export const DppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         removeFromMistakeBook,
         sendMessageToChat,
         spawnSimilarQuestion,
+        addFormula,
+        toggleFormulaFavorite,
+        deleteFormula,
+        addFocusedMinutes,
       }}
     >
       {children}

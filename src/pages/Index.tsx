@@ -3,12 +3,15 @@ import { DppProvider, useDpp } from "../context/DppContext";
 import { UploadZone } from "../components/UploadZone";
 import { QuestionCard } from "../components/QuestionCard";
 import { MistakeBookExplorer } from "../components/MistakeBookExplorer";
-import { BookOpen, Sparkles, Database, LayoutGrid, CheckCircle2, Award, BrainCircuit, Play } from "lucide-react";
+import { FormulaSheet } from "../components/FormulaSheet";
+import { MockTestGenerator } from "../components/MockTestGenerator";
+import { PomodoroTimer } from "../components/PomodoroTimer";
+import { BookOpen, Sparkles, Database, LayoutGrid, CheckCircle2, Award, BrainCircuit, Play, Layers, Timer } from "lucide-react";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 
 const DashboardContent: React.FC = () => {
-  const { questions, attempts, mistakes, chapters } = useDpp();
-  const [activeTab, setActiveTab] = useState<"dpp" | "upload" | "mistakes">("dpp");
+  const { questions, attempts, mistakes, chapters, studyStats } = useDpp();
+  const [activeTab, setActiveTab] = useState<"dpp" | "upload" | "mistakes" | "formulas" | "mocks">("dpp");
   const [selectedSubjectFilter, setSelectedSubjectFilter] = useState<"Physics" | "Chemistry" | "Biology">("Physics");
   const [selectedChapterId, setSelectedChapterId] = useState<string>("");
   const [activeQuestionIdx, setActiveQuestionIdx] = useState(0);
@@ -28,7 +31,7 @@ const DashboardContent: React.FC = () => {
     <div className="min-h-screen bg-[#060814] text-slate-100 flex flex-col font-sans selection:bg-emerald-500/30 selection:text-emerald-300">
       {/* HEADER SECTION */}
       <header className="border-b border-slate-900 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50 px-4 py-3.5">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="max-w-6xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
               <BrainCircuit className="w-6 h-6 text-white" />
@@ -42,18 +45,26 @@ const DashboardContent: React.FC = () => {
           </div>
 
           {/* Tab Selection */}
-          <div className="flex gap-1.5 bg-slate-900 p-1 rounded-2xl border border-slate-800">
-            {(["dpp", "upload", "mistakes"] as const).map((tab) => (
+          <div className="flex flex-wrap justify-center gap-1.5 bg-slate-900 p-1.5 rounded-2xl border border-slate-800">
+            {(["dpp", "upload", "mistakes", "formulas", "mocks"] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`px-4 py-2 text-xs font-bold rounded-xl uppercase tracking-wider transition-all ${
+                className={`px-3.5 py-2 text-xs font-bold rounded-xl uppercase tracking-wider transition-all ${
                   activeTab === tab
                     ? "bg-slate-800 text-emerald-400 shadow"
                     : "text-slate-400 hover:text-slate-200"
                 }`}
               >
-                {tab === "dpp" ? "Solve Live DPP" : tab === "upload" ? "Ingest Hub / PDF" : "Mistake Book"}
+                {tab === "dpp"
+                  ? "Solve Live DPP"
+                  : tab === "upload"
+                  ? "Ingest Hub / PDF"
+                  : tab === "mistakes"
+                  ? "Mistake Book"
+                  : tab === "formulas"
+                  ? "Formula Cards"
+                  : "Mocks"}
               </button>
             ))}
           </div>
@@ -95,11 +106,11 @@ const DashboardContent: React.FC = () => {
 
           <div className="p-4 bg-slate-900/40 rounded-2xl border border-slate-900 flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center shrink-0">
-              <Database className="w-5 h-5" />
+              <Timer className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Active Folders</div>
-              <div className="text-xl font-black text-slate-100">{chapters.length} Chapters</div>
+              <div className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Focus Streak</div>
+              <div className="text-xl font-black text-slate-100">{studyStats.focused_minutes} Mins</div>
             </div>
           </div>
         </div>
@@ -173,6 +184,9 @@ const DashboardContent: React.FC = () => {
                 <p className="font-bold text-slate-200 mb-1">Chapter isolation rule active:</p>
                 Currently reviewing questions exclusively bound to <span className="text-emerald-400 font-semibold">"{selectedChapter?.chapter_name || "N/A"}"</span>. Flat lists are blocked.
               </div>
+
+              {/* INTEGRATED POMODORO STUDY TIMER ON SIDEBAR FOR QUICK FOCUS */}
+              <PomodoroTimer />
             </div>
 
             {/* LIVE DPP EXAM & COPILOT CHAT BOX */}
@@ -226,6 +240,10 @@ const DashboardContent: React.FC = () => {
         {activeTab === "upload" && <UploadZone />}
 
         {activeTab === "mistakes" && <MistakeBookExplorer />}
+
+        {activeTab === "formulas" && <FormulaSheet />}
+
+        {activeTab === "mocks" && <MockTestGenerator />}
       </main>
 
       <footer className="mt-auto py-6 border-t border-slate-900/80 bg-slate-950/40 text-center">
