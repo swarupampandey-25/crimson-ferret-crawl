@@ -6,12 +6,13 @@ import { MistakeBookExplorer } from "../components/MistakeBookExplorer";
 import { FormulaSheet } from "../components/FormulaSheet";
 import { MockTestGenerator } from "../components/MockTestGenerator";
 import { PomodoroTimer } from "../components/PomodoroTimer";
-import { BookOpen, Sparkles, Database, LayoutGrid, CheckCircle2, Award, BrainCircuit, Play, Layers, Timer } from "lucide-react";
+import { AnalyticsDashboard } from "../components/AnalyticsDashboard";
+import { BookOpen, Sparkles, Database, LayoutGrid, CheckCircle2, Award, BrainCircuit, Play, Layers, Timer, BarChart3 } from "lucide-react";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 
 const DashboardContent: React.FC = () => {
   const { questions, attempts, mistakes, chapters, studyStats } = useDpp();
-  const [activeTab, setActiveTab] = useState<"dpp" | "upload" | "mistakes" | "formulas" | "mocks">("dpp");
+  const [activeTab, setActiveTab] = useState<"dpp" | "upload" | "mistakes" | "formulas" | "mocks" | "analytics">("dpp");
   const [selectedSubjectFilter, setSelectedSubjectFilter] = useState<"Physics" | "Chemistry" | "Biology">("Physics");
   const [selectedChapterId, setSelectedChapterId] = useState<string>("");
   const [activeQuestionIdx, setActiveQuestionIdx] = useState(0);
@@ -46,7 +47,7 @@ const DashboardContent: React.FC = () => {
 
           {/* Tab Selection */}
           <div className="flex flex-wrap justify-center gap-1.5 bg-slate-900 p-1.5 rounded-2xl border border-slate-800">
-            {(["dpp", "upload", "mistakes", "formulas", "mocks"] as const).map((tab) => (
+            {(["dpp", "upload", "mistakes", "formulas", "mocks", "analytics"] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -64,7 +65,9 @@ const DashboardContent: React.FC = () => {
                   ? "Mistake Book"
                   : tab === "formulas"
                   ? "Formula Cards"
-                  : "Mocks"}
+                  : tab === "mocks"
+                  ? "Mocks"
+                  : "Analytics"}
               </button>
             ))}
           </div>
@@ -222,7 +225,7 @@ const DashboardContent: React.FC = () => {
                       </button>
                       <button
                         disabled={activeQuestionIdx === chapterQuestions.length - 1}
-                        onClick={() => setActiveQuestionIdx((prev) => prev + 1)}
+                        onClick={() => setActiveQuestionIdx((prev) => prev - 1)}
                         className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 disabled:opacity-40 rounded-xl text-xs text-slate-300 font-bold transition-all"
                       >
                         Next
@@ -244,6 +247,8 @@ const DashboardContent: React.FC = () => {
         {activeTab === "formulas" && <FormulaSheet />}
 
         {activeTab === "mocks" && <MockTestGenerator />}
+
+        {activeTab === "analytics" && <AnalyticsDashboard />}
       </main>
 
       <footer className="mt-auto py-6 border-t border-slate-900/80 bg-slate-950/40 text-center">
