@@ -7,6 +7,7 @@ import { FormulaSheet } from "../components/FormulaSheet";
 import { MockTestGenerator } from "../components/MockTestGenerator";
 import { PomodoroTimer } from "../components/PomodoroTimer";
 import { AnalyticsDashboard } from "../components/AnalyticsDashboard";
+import { DailyChecklist } from "../components/DailyChecklist";
 import { BookOpen, Sparkles, Database, LayoutGrid, CheckCircle2, Award, BrainCircuit, Play, Layers, Timer, BarChart3 } from "lucide-react";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 
@@ -182,11 +183,8 @@ const DashboardContent: React.FC = () => {
                 </div>
               </div>
 
-              {/* STAT SUMMARY OF SELECTED CHAPTER */}
-              <div className="bg-slate-950 p-4 rounded-3xl border border-slate-900 text-xs text-slate-400 leading-relaxed">
-                <p className="font-bold text-slate-200 mb-1">Chapter isolation rule active:</p>
-                Currently reviewing questions exclusively bound to <span className="text-emerald-400 font-semibold">"{selectedChapter?.chapter_name || "N/A"}"</span>. Flat lists are blocked.
-              </div>
+              {/* STUDY CHECKLIST FOR SOLVING MOTIVATION */}
+              <DailyChecklist />
 
               {/* INTEGRATED POMODORO STUDY TIMER ON SIDEBAR FOR QUICK FOCUS */}
               <PomodoroTimer />
@@ -225,7 +223,7 @@ const DashboardContent: React.FC = () => {
                       </button>
                       <button
                         disabled={activeQuestionIdx === chapterQuestions.length - 1}
-                        onClick={() => setActiveQuestionIdx((prev) => prev - 1)}
+                        onClick={() => setActiveQuestionIdx((prev) => prev + 1)}
                         className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 disabled:opacity-40 rounded-xl text-xs text-slate-300 font-bold transition-all"
                       >
                         Next
