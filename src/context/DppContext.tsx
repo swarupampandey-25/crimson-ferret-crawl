@@ -1,71 +1,18 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { showSuccess, showError } from "@/utils/toast";
+import { 
+  Chapter, 
+  Question, 
+  UserAttempt, 
+  MistakeEntry, 
+  AIChat, 
+  Formula, 
+  StudyStats 
+} from "../types/dpp";
+import { initialChapters, initialQuestions, initialFormulas } from "./initialData";
 
-export interface Chapter {
-  chapter_id: string;
-  subject_name: "Physics" | "Chemistry" | "Biology";
-  chapter_name: string;
-}
-
-export interface Question {
-  question_id: string;
-  chapter_id: string;
-  topic_name: string;
-  question_text: string;
-  diagram_url?: string;
-  option_a: string;
-  option_b: string;
-  option_c: string;
-  option_d: string;
-  correct_option: "A" | "B" | "C" | "D";
-  parent_question_id?: string;
-  created_at: string;
-  difficulty?: "Easy" | "Medium" | "Hard";
-}
-
-export interface UserAttempt {
-  attempt_id: string;
-  question_id: string;
-  selected_option: "A" | "B" | "C" | "D" | null;
-  is_correct: boolean;
-  time_taken_seconds: number;
-  attempted_at: string;
-}
-
-export interface MistakeEntry {
-  mistake_id: string;
-  question_id: string;
-  chapter_id: string;
-  error_type: "Conceptual Loophole" | "Calculation Error" | "Skipped";
-  created_at: string;
-}
-
-export interface ChatMessage {
-  role: "user" | "assistant";
-  content: string;
-}
-
-export interface AIChat {
-  chat_id: string;
-  question_id: string;
-  conversation_history: ChatMessage[];
-  updated_at: string;
-}
-
-export interface Formula {
-  formula_id: string;
-  chapter_id: string;
-  subject_name: "Physics" | "Chemistry" | "Biology";
-  title: string;
-  expression: string;
-  description: string;
-  is_favorite: boolean;
-}
-
-export interface StudyStats {
-  focused_minutes: number;
-  completed_sessions: number;
-}
+// Re-export type definitions for components that import them directly from here
+export type { Chapter, Question, UserAttempt, MistakeEntry, AIChat, Formula, StudyStats };
 
 interface DppContextType {
   chapters: Chapter[];
@@ -91,113 +38,6 @@ interface DppContextType {
 }
 
 const DppContext = createContext<DppContextType | undefined>(undefined);
-
-const initialChapters: Chapter[] = [
-  { chapter_id: "ch-1", subject_name: "Physics", chapter_name: "Rotational Mechanics" },
-  { chapter_id: "ch-2", subject_name: "Physics", chapter_name: "Electrostatics" },
-  { chapter_id: "ch-3", subject_name: "Chemistry", chapter_name: "Chemical Bonding" },
-  { chapter_id: "ch-4", subject_name: "Chemistry", chapter_name: "Thermodynamics" },
-  { chapter_id: "ch-5", subject_name: "Biology", chapter_name: "Cell Cycle & Division" },
-  { chapter_id: "ch-6", subject_name: "Biology", chapter_name: "Principles of Inheritance" },
-];
-
-const initialQuestions: Question[] = [
-  {
-    question_id: "q-1",
-    chapter_id: "ch-1",
-    topic_name: "Moment of Inertia",
-    question_text: "A thin uniform rod of mass M and length L is rotating about an axis passing through its center and perpendicular to its length. Find its Moment of Inertia.",
-    option_a: "M L² / 12",
-    option_b: "M L² / 3",
-    option_c: "M L² / 2",
-    option_d: "2/5 M L²",
-    correct_option: "A",
-    difficulty: "Easy",
-    created_at: new Date().toISOString()
-  },
-  {
-    question_id: "q-2",
-    chapter_id: "ch-1",
-    topic_name: "Conservation of Angular Momentum",
-    question_text: "A child stands at the center of a turntable rotating with angular velocity ω. If the child walks radially outwards to the edge, what happens to the angular velocity of the system?",
-    option_a: "Increases",
-    option_b: "Decreases",
-    option_c: "Remains constant",
-    option_d: "First increases then decreases",
-    correct_option: "B",
-    difficulty: "Medium",
-    created_at: new Date().toISOString()
-  },
-  {
-    question_id: "q-3",
-    chapter_id: "ch-2",
-    topic_name: "Gauss's Law",
-    question_text: "An electric charge q is placed at the center of a cube of side length 'a'. What is the total electric flux passing through one face of the cube?",
-    option_a: "q / ε₀",
-    option_b: "q / (6 ε₀)",
-    option_c: "q / (2 ε₀)",
-    option_d: "Zero",
-    correct_option: "B",
-    difficulty: "Medium",
-    created_at: new Date().toISOString()
-  },
-  {
-    question_id: "q-4",
-    chapter_id: "ch-3",
-    topic_name: "VSEPR Theory",
-    question_text: "What is the molecular geometry of SF₄ (Sulfur tetrafluoride) according to the VSEPR theory?",
-    option_a: "Tetrahedral",
-    option_b: "Square Planar",
-    option_c: "See-saw",
-    option_d: "Trigonal Bipyramidal",
-    correct_option: "C",
-    difficulty: "Hard",
-    created_at: new Date().toISOString()
-  },
-  {
-    question_id: "q-5",
-    chapter_id: "ch-5",
-    topic_name: "Mitosis Phase",
-    question_text: "During which phase of Mitosis do the sister chromatids separate and move towards the opposite poles of the spindle fibers?",
-    option_a: "Prophase",
-    option_b: "Metaphase",
-    option_c: "Anaphase",
-    option_d: "Telophase",
-    correct_option: "C",
-    difficulty: "Easy",
-    created_at: new Date().toISOString()
-  }
-];
-
-const initialFormulas: Formula[] = [
-  {
-    formula_id: "f-1",
-    chapter_id: "ch-1",
-    subject_name: "Physics",
-    title: "Parallel Axis Theorem",
-    expression: "I = I_cm + M d²",
-    description: "Computes moment of inertia about any axis parallel to the axis passing through center of mass.",
-    is_favorite: true
-  },
-  {
-    formula_id: "f-2",
-    chapter_id: "ch-2",
-    subject_name: "Physics",
-    title: "Electric Potential of Point Charge",
-    expression: "V = k Q / r",
-    description: "Determines work required to bring unit positive charge from infinity.",
-    is_favorite: false
-  },
-  {
-    formula_id: "f-3",
-    chapter_id: "ch-3",
-    subject_name: "Chemistry",
-    title: "Formal Charge calculation",
-    expression: "FC = V - N - B/2",
-    description: "V = Valence electrons, N = Non-bonding electrons, B = bonding shared electrons.",
-    is_favorite: true
-  }
-];
 
 export const DppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [chapters, setChapters] = useState<Chapter[]>(() => {
@@ -348,9 +188,9 @@ export const DppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         updated_at: new Date().toISOString(),
       };
 
-      const userMsg: ChatMessage = { role: "user", content: message };
-      const aiMsg: ChatMessage = {
-        role: "assistant",
+      const userMsg = { role: "user" as const, content: message };
+      const aiMsg = {
+        role: "assistant" as const,
         content: assistantReply || `Let's break this down. In the topic "${questions.find(q => q.question_id === question_id)?.topic_name || "Physics"}", remember to use the correct formulas and double-check standard values!`,
       };
 
